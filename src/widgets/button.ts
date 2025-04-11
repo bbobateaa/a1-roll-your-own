@@ -15,6 +15,7 @@ class Button extends Widget{
     private defaultFontSize: number = 18;
     private defaultWidth: number = 80;
     private defaultHeight: number = 30;
+    private _onClickHandler?: () => void;
 
     constructor(parent:Window){
         super(parent);
@@ -38,15 +39,62 @@ class Button extends Widget{
         this.update();
     }
 
-    private positionText(){
-        let box:Box = this._text.bbox();
-        // in TS, the prepending with + performs a type conversion from string to number
-        this._text_y = (+this._rect.y() + ((+this._rect.height()/2)) - (box.height/2));
-        this._text.x(+this._rect.x() + 4);
-        if (this._text_y > 0){
-            this._text.y(this._text_y);
+    public setRadius(radius: number): void {
+        if (this._rect) {
+            this._rect.radius(radius);
         }
     }
+
+    public setSize(height: number, width: number): void {
+        if (this._rect) {
+            this._rect.width(width);
+            this._rect.height(height);
+        }
+    }
+
+    setBorder(color: string, width: number): void {
+        if (this._rect) {
+            this._rect.stroke({ color: color, width: width });
+        }
+    }
+
+    get label(): string {
+        return this._input
+    }
+
+    set label(value: string) {
+        this._input = value;
+        if (this._text) {
+            this._text.text(value);
+            this.positionText();
+        }
+    }
+
+    get size(): { width: number; height: number } {
+        return {
+            width: +this._rect.width(),
+            height: +this._rect.height()
+        };
+    }
+    
+    set size(val: {width: number; height: number}) {
+        this.setSize(val.height, val.width);
+    }
+    
+    private positionText() {
+        const rectX = +this._rect.x();
+        const rectY = +this._rect.y();
+        const rectWidth = +this._rect.width();
+        const rectHeight = +this._rect.height();
+    
+        const box: Box = this._text.bbox();
+        const centerX = rectX + (rectWidth / 2) - (box.width / 2);
+        const centerY = rectY + (rectHeight / 2) - (box.height / 2);
+    
+        this._text.x(centerX);
+        this._text.y(centerY);
+    }
+    
     
     render(): void {
         this._group = (this.parent as Window).window.group();
@@ -63,6 +111,15 @@ class Button extends Widget{
         // for this widget, we want to know when the group or rect objects
         // receive events
         this.registerEvent(eventrect);
+
+        eventrect.on('click', () => {
+            if (this._onClickHandler) {
+                this._onClickHandler();
+            }
+            requestAnimationFrame(() => {
+                this.update();
+            });
+        });
     }
 
     override update(): void {
@@ -84,34 +141,69 @@ class Button extends Widget{
     }
 
     //TODO: implement the onClick event using a callback passed as a parameter
-    onClick(/*TODO: add callback parameter*/):void{}
+    onClick(callback: () => void): void {
+        this._onClickHandler = callback;
+    }
 
     
     //TODO: give the states something to do! Use these methods to control the visual appearance of your
     //widget
     idleupState(): void {
-        throw new Error("Method not implemented.");
+        this.fontSize = 20;
+        this.defaultHeight = 40;
+        this.backcolor = '#A881A1';
+        this.move(15, 50);
+        this._rect.animate(200).scale(1.1);
+        this._rect.radius(10);
     }
     idledownState(): void {
-        throw new Error("Method not implemented.");
+        this.fontSize = 20;
+        this.defaultHeight = 40;
+        this.backcolor = '#F2CEEA';
+        this.move(25, 50);
+        this._rect.animate(200).opacity(0.7).opacity(1);
     }
     pressedState(): void {
-        throw new Error("Method not implemented.");
+        this.fontSize = 10;
+        this.defaultHeight = 80;
+        this.defaultWidth = 80;
+        this.backcolor = '#545EEA';
+        this.move(80, 50);
+        this._rect.animate(100).scale(1);
     }
     hoverState(): void {
-        throw new Error("Method not implemented.");
+        this.fontSize = 20;
+        this.defaultHeight = 40;
+        this.backcolor = '#C5B5C2';
     }
     hoverPressedState(): void {
-        throw new Error("Method not implemented.");
+        this.fontSize = 20;
+        this.defaultHeight = 40;
+        this.backcolor = '#BCE7EB';
+        this.move(100, 50);
+        this._rect.animate(200).scale(1.1).scale(1);
+
     }
     pressedoutState(): void {
-        throw new Error("Method not implemented.");
+        this.fontSize = 20;
+        this.defaultHeight = 40;
+        this.backcolor = '#684761';
+        this._rect.animate(100).scale(0.6);
     }
     moveState(): void {
-        throw new Error("Method not implemented.");
+        this.fontSize = 100;
+        this.defaultHeight = 100;
+        this.backcolor = '#FF36D7';
+        this.defaultWidth = 30;
+        this._rect.animate(200).rotate(50);
     }
     keyupState(keyEvent?: KeyboardEvent): void {
-        throw new Error("Method not implemented.");
+        if (keyEvent) {
+            this.fontSize = 20;
+            this.defaultHeight = 40;
+            this.backcolor = '#AF59E9';
+        }
+
     }
 }
 

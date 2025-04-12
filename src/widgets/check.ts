@@ -2,46 +2,42 @@
 import {IdleUpWidgetState, PressedWidgetState } from "../core/ui";
 import {Window, Widget, RoleType, EventArgs} from "../core/ui";
 // importing code from SVG.js library
-import {Rect, Text, Box} from "../core/ui";
+import {Rect, Text, Line} from "../core/ui";
 
-class Button extends Widget{
+class Checkbox extends Widget {
     private _rect: Rect;
     private _text: Text;
+    private _check: Line[] = [];
     private _input: string;
-    private _fontSize: number;
-    private _text_y: number;
-    private _text_x: number;
-    private defaultText: string= "Button";
-    private defaultFontSize: number = 18;
+    private _isChecked: boolean = false;
+    private _onToggleHandler?: (checked: boolean) => void;
+    private defaultText: string= "checked this box";
+    private fontSize: number = 18;
     private defaultWidth: number = 80;
     private defaultHeight: number = 30;
     private _onClickHandler?: () => void;
 
     constructor(parent:Window){
         super(parent);
-        // set defaults
-        this.height = this.defaultHeight;
-        this.width = this.defaultWidth;
+        this.width = 150;
+        this.height = 30;
         this._input = this.defaultText;
-        this._fontSize = this.defaultFontSize;
-        // set Aria role
-        this.role = RoleType.button;
-        // render widget
+        this.role = RoleType.checkbox;
         this.render();
-        // set default or starting state
-        this.setState(new IdleUpWidgetState());
-        // prevent text selection
         this.selectable = false;
     }
 
-    set fontSize(size:number){
-        this._fontSize= size;
-        this.update();
-    }
+    private drawCheckmark(): void {
+        const x = +this._rect.x();
+        const y = +this._rect.y();
 
-    public setRadius(radius: number): void {
-        if (this._rect) {
-            this._rect.radius(radius);
+        this._check.forEach(line => line.remove());
+        this._check = [];
+
+        if (this._isChecked) {
+                const line1 = this._group.line(x + 4, y + 12, x + 10, y + 18).stroke({width: 2, color: "black"});
+                const line2 = this._group.line(x + 10, y + 18, x + 20, y + 5).stroke({width: 2, color: "black"});
+                this._check.push(line1, line2);
         }
     }
 
@@ -58,99 +54,96 @@ class Button extends Widget{
         }
     }
 
-    get label(): string {
-        return this._input
+    set backcolor(color: string) {
+        if (this._rect) {
+            this._rect.fill(color);
+        }
+    }
+    
+    set forecolor(color: string) {
+        if (this._text) {
+            this._text.fill(color);
+        }
     }
 
+    get label(): string {
+        return this._input;
+    }
+    
     set label(value: string) {
         this._input = value;
         if (this._text) {
             this._text.text(value);
-            this.positionText();
         }
     }
+    
 
-    get size(): { width: number; height: number } {
-        return {
-            width: +this._rect.width(),
-            height: +this._rect.height()
-        };
-    }
-    
-    set size(val: {width: number; height: number}) {
-        this.setSize(val.height, val.width);
-    }
-    
-    private positionText() {
-        const rectX = +this._rect.x();
-        const rectY = +this._rect.y();
-        const rectWidth = +this._rect.width();
-        const rectHeight = +this._rect.height();
-    
-        const box: Box = this._text.bbox();
-        const centerX = rectX + (rectWidth / 2) - (box.width / 2);
-        const centerY = rectY + (rectHeight / 2) - (box.height / 2);
-    
-        this._text.x(centerX);
-        this._text.y(centerY);
-    }
-    
+    // render(): void {
+    //     this._group = (this.parent as Window).window.group();
+    //     this._rect = this._group.rect(24, 24).fill("#fff").stroke({color: "#000", width: 2}).radius(4);
+    //     this._rect.x(0).y(0);
+    //     this._text = this._group.text(this._input)
+    //         .x(30) // Push it to the right of the checkbox
+    //         .y(2)  // Adjust vertical alignment
+    //         .font({ size: this.fontSize, anchor: "start", leading: "1.2em" });
+    //     let eventRect = this._group.rect(this.width, this.height).opacity(0);
+    //     this.registerEvent(eventRect);
+
+    //     eventRect.on("click", () => {
+    //         this._isChecked = !this._isChecked;
+    //         this.drawCheckmark();
+    //         if (this._onToggleHandler) {
+    //             this._onToggleHandler(this._isChecked);
+    //         }
+    //     });
+    //     this.drawCheckmark();
+    // }
+
     render(): void {
         this._group = (this.parent as Window).window.group();
-        this._rect = this._group.rect(this.width, this.height);
+        this._rect = this._group.rect(24, 24).fill("#fff").stroke({color: "#000", width: 2}).radius(4);
         this._rect.stroke("black");
-        this._text = this._group.text(this._input);
+        this._text = this._group.text(this._input).x(30).y(2).fill("black");
         // Set the outer svg element 
         this.outerSvg = this._group;
         // Add a transparent rect on top of text to 
         // prevent selection cursor and to handle mouse events
-        let eventrect = this._group.rect(this.width, this.height).opacity(0).attr('id', 0);
+        let eventRect = this._group.rect(this.width, this.height).opacity(0).attr('id', 0);
 
         // register objects that should receive event notifications.
         // for this widget, we want to know when the group or rect objects
         // receive events
-        this.registerEvent(eventrect);
-
-        eventrect.on('click', () => {
+        this.registerEvent(eventRect);
+        
+        eventRect.on("click", () => {
+            this._isChecked = !this._isChecked;
+            this.drawCheckmark();
+        
+            if (this._onToggleHandler) {
+                this._onToggleHandler(this._isChecked);
+            }
+        
             if (this._onClickHandler) {
                 this._onClickHandler();
             }
+        
             requestAnimationFrame(() => {
                 this.update();
             });
         });
-    }
-
-    override update(): void {
-        if(this._text != null)
-            this._text.font('size', this._fontSize);
-            this._text.text(this._input);
-            this.positionText();
-
-        if(this._rect != null)
-            this._rect.fill(this.backcolor);
         
-        super.update();
-    }
-    
-    pressReleaseState(): void{
-
-        if (this.previousState instanceof PressedWidgetState)
-            this.raise(new EventArgs(this));
     }
 
-    //TODO: implement the onClick event using a callback passed as a parameter
     onClick(callback: () => void): void {
         this._onClickHandler = callback;
     }
 
-    
-    //TODO: give the states something to do! Use these methods to control the visual appearance of your widget
+    //TODO: give the states something to do! Use these methods to control the visual appearance of your
+    //widget
     idleupState(): void {
         this.fontSize = 20;
         this.defaultHeight = 40;
         this.backcolor = '#A881A1';
-        this.move(15, 50);
         this._rect.animate(200).scale(1.1);
         this._rect.radius(10);
     }
@@ -158,18 +151,23 @@ class Button extends Widget{
         this.fontSize = 20;
         this.defaultHeight = 40;
         this.backcolor = '#F2CEEA';
-        this.move(25, 50);
         this._rect.animate(200).opacity(0.7).opacity(1);
     }
+    pressReleaseState(): void {
+        this.fontSize = 10;
+        this.defaultHeight = 80;
+        this.defaultWidth = 80;
+        this.backcolor = '#545EEA';
+        this._rect.animate(100).scale(1);
+    }
+
     pressedState(): void {
         this.fontSize = 10;
         this.defaultHeight = 80;
         this.defaultWidth = 80;
         this.backcolor = '#545EEA';
-        this.move(80, 50);
         this._rect.animate(100).scale(1);
     }
-
     hoverState(): void {
         this.fontSize = 20;
         this.defaultHeight = 40;
@@ -179,7 +177,6 @@ class Button extends Widget{
         this.fontSize = 20;
         this.defaultHeight = 40;
         this.backcolor = '#BCE7EB';
-        this.move(100, 50);
         this._rect.animate(200).scale(1.1).scale(1);
 
     }
@@ -202,8 +199,7 @@ class Button extends Widget{
             this.defaultHeight = 40;
             this.backcolor = '#AF59E9';
         }
-
     }
 }
 
-export {Button}
+export {Checkbox};

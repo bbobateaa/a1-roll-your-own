@@ -1,4 +1,4 @@
-import { SVG, Svg, G, Container, Rect, Text, Box, Circle, Number, A } from '@svgdotjs/svg.js'
+import { SVG, Svg, G, Container, Rect, Text, Box, Circle, Line, Number, A } from '@svgdotjs/svg.js'
 
 enum RoleType {
     button = "button",
@@ -7,6 +7,8 @@ enum RoleType {
     none = "none",
     scrollbar = "scrollbar",
     window = "window",
+    checkbox = "checkbox",
+    radiobutton = "radiobutton"
 }
 
 interface IAccessibility {
@@ -551,4 +553,4 @@ abstract class Widget extends Component {
 export { Window, Widget, Component, IAccessibility, RoleType, EventArgs }
 export { IdleUpWidgetState, IdleDownWidgetState, HoverWidgetState, HoverPressedWidgetState, PressedWidgetState, PressedOutWidgetState, DragWindowState };
 // from svg.js
-export { SVG, Svg, G, Rect, Container, Text, Box, Circle, Number };
+export { SVG, Svg, G, Rect, Container, Text, Box, Circle, Line, Number };

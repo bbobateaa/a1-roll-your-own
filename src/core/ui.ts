@@ -8,7 +8,8 @@ enum RoleType {
     scrollbar = "scrollbar",
     window = "window",
     checkbox = "checkbox",
-    radiobutton = "radiobutton"
+    radiobutton = "radiobutton",
+    generic = "generic"
 }
 
 interface IAccessibility {
@@ -371,8 +372,7 @@ class Window extends Component {
     constructor(height: any, width: any) {
         super();
         let body = SVG().addTo('body').size(width, height);
-        let rect = body.rect(width, height).fill("white").stroke("black")
-          .attr({ 'stroke-width': 3 });
+        let rect = body.rect(width, height).fill("white").stroke("black").attr({ 'stroke-width': 3 });
         this._window = SVG().addTo(body);
         this.outerSvg = this._window;
         this.registerEvent(body);

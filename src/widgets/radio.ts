@@ -1,12 +1,10 @@
-// importing local code, code we have written
-import {IdleUpWidgetState, PressedWidgetState } from "../core/ui";
-import {Window, Widget, RoleType, EventArgs} from "../core/ui";
-// importing code from SVG.js library
-import {Rect, Text, Line} from "../core/ui";
+import { IdleUpWidgetState, PressedWidgetState } from "../core/ui";
+import { Window, Widget, RoleType, EventArgs } from "../core/ui";
+import { Rect, Text, Line } from "../core/ui";
 
 class RadioButton extends Widget {
-    private _circle: Rect; // Outer circle of the radio button
-    private _dot?: Rect;   // Inner filled circle for selection
+    private _circle: Rect;
+    private _dot?: Rect;
     private _text: Text;
     private _input: string;
     private _isChecked: boolean = false;
@@ -21,6 +19,11 @@ class RadioButton extends Widget {
     x: number;
     color: string;
 
+    private _circleColor: string = "#F2CEEA";
+    private _borderColor: string = "#B1569F";
+    private _dotColor: string = "#B1569F";
+    private _textColor: string = "black";
+
     constructor(parent: Window, groupName: string) {
         super(parent);
         this.width = 250;
@@ -30,7 +33,6 @@ class RadioButton extends Widget {
         this.role = RoleType.radiobutton;
         this.selectable = false;
 
-        // Register in group
         if (!RadioButton._groupRegistry[groupName]) {
             RadioButton._groupRegistry[groupName] = [];
         }
@@ -49,7 +51,7 @@ class RadioButton extends Widget {
             const cy = +this._circle.y() + 6;
 
             this._dot = this._group.rect(12, 12)
-                .fill("#B1569F")
+                .fill(this._dotColor)
                 .radius(6)
                 .x(cx)
                 .y(cy);
@@ -60,14 +62,16 @@ class RadioButton extends Widget {
         this._group = (this.parent as Window).window.group();
         this._group.translate(this.x || 0, this.y || 0);
 
-        this._circle = this._group.rect(24, 24).fill("#F2CEEA").stroke({ color: "#B1569F", width: 2 }).radius(12);
+        this._circle = this._group.rect(24, 24)
+            .fill(this._circleColor)
+            .stroke({ color: this._borderColor, width: 2 })
+            .radius(12);
         this._circle.x(0).y(0);
 
-        this._text = this._group.text(this._input).x(30).y(2).fill("black");
-
+        this._text = this._group.text(this._input).x(30).y(2).fill(this._textColor);
         this.outerSvg = this._group;
 
-        let eventRect = this._group.rect(this.width, this.height).opacity(0);
+        let eventRect = this._group.rect(this.width, this.height).opacity(0).attr('id', 4);
         this.registerEvent(eventRect);
 
         eventRect.on("click", () => {
@@ -83,6 +87,7 @@ class RadioButton extends Widget {
                 this.update();
             });
         });
+
         eventRect.on("mouseover", () => this.hoverState());
         eventRect.on("mouseout", () => this.idleupState());
         eventRect.on("click", () => {
@@ -94,7 +99,6 @@ class RadioButton extends Widget {
     }
 
     private select(): void {
-        // Uncheck all other buttons in the same group
         RadioButton._groupRegistry[this._groupName].forEach(rb => {
             if (rb !== this) {
                 rb._isChecked = false;
@@ -102,7 +106,6 @@ class RadioButton extends Widget {
             }
         });
 
-        // Check this one
         this._isChecked = true;
         this.drawRadioDot();
 
@@ -146,8 +149,7 @@ class RadioButton extends Widget {
             this._group.translate(x, y);
         }
     }
-    
-    // RadioButton.ts
+
     onSelect(callback: () => void): void {
         this._onClickHandler = callback;
     }
@@ -157,61 +159,61 @@ class RadioButton extends Widget {
         this.drawRadioDot();
     }
 
-    //TODO: give the states something to do! Use these methods to control the visual appearance of your
-    //widget
+    set circleColor(value: string) {
+        this._circleColor = value;
+        if (this._circle) {
+            this._circle.fill(value);
+        }
+    }
+
+    set borderColor(value: string) {
+        this._borderColor = value;
+        if (this._circle) {
+            this._circle.stroke({ color: value, width: 2 });
+        }
+    }
+
+    set dotColor(value: string) {
+        this._dotColor = value;
+        this.drawRadioDot();
+    }
+
+    set textColor(value: string) {
+        this._textColor = value;
+        if (this._text) {
+            this._text.fill(value);
+        }
+    }
+
     idleupState(): void {
-        this.fontSize = 20;
-        this.defaultHeight = 40;
-        this.backcolor = '#A881A1';
-        this._circle.radius(10);
+        this._circleColor = '#A881A1';
     }
     idledownState(): void {
-        this.fontSize = 20;
-        this.defaultHeight = 40;
-        this.backcolor = '#F2CEEA';
+        this._circleColor = '#F2CEEA';
     }
     pressReleaseState(): void {
-        this.fontSize = 10;
-        this.defaultHeight = 80;
-        this.defaultWidth = 80;
-        this.backcolor = '#545EEA';
+        this._circleColor = '#545EEA';
     }
-
     pressedState(): void {
-        this.fontSize = 10;
-        this.defaultHeight = 80;
-        this.defaultWidth = 80;
-        this.backcolor = '#545EEA';
+        this._circleColor = '#545EEA';
     }
     hoverState(): void {
-        this.fontSize = 20;
-        this.defaultHeight = 40;
-        this.backcolor = '#C5B5C2';
+        this._circleColor = '#C5B5C2';
     }
     hoverPressedState(): void {
-        this.fontSize = 20;
-        this.defaultHeight = 40;
-        this.backcolor = '#BCE7EB';
-
+        this._circleColor = '#BCE7EB';
     }
     pressedoutState(): void {
-        this.fontSize = 20;
-        this.defaultHeight = 40;
-        this.backcolor = '#684761';
+        this._circleColor = '#684761';
     }
     moveState(): void {
-        this.fontSize = 100;
-        this.defaultHeight = 100;
-        this.backcolor = '#FF36D7';
-        this.defaultWidth = 30;
+        this._circleColor = '#FF36D7';
     }
     keyupState(keyEvent?: KeyboardEvent): void {
         if (keyEvent) {
-            this.fontSize = 20;
-            this.defaultHeight = 40;
-            this.backcolor = '#AF59E9';
+            this._circleColor = '#AF59E9';
         }
     }
 }
 
-export {RadioButton};
+export { RadioButton };
